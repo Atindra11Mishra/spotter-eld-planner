@@ -53,7 +53,7 @@ function App() {
             </section>
 
             <TripSummary data={tripData} />
-            <ELDLog schedule={tripData?.schedule} />
+            <ELDLog data={tripData} schedule={tripData?.schedule} />
           </>
         )}
       </section>

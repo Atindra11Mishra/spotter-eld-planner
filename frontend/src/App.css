@@ -731,21 +731,33 @@ h3 {
 .log-form-svg {
   display: block;
   width: 100%;
-  min-width: 1080px;
+  min-width: 1180px;
   height: auto;
 }
 
 .form-title {
   fill: #020617;
-  font-size: 24px;
+  font-size: 22px;
+  font-weight: 900;
+}
+
+.form-day-label {
+  fill: #020617;
+  font-size: 18px;
   font-weight: 900;
 }
 
 .form-small,
 .remarks-text {
   fill: #111827;
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 700;
+}
+
+.form-value {
+  fill: #0f172a;
+  font-size: 12px;
+  font-weight: 850;
 }
 
 .grid-header-text,
@@ -753,7 +765,7 @@ h3 {
 .grid-total-title,
 .hour-top-label {
   fill: #fff;
-  font-size: 10px;
+  font-size: 9px;
   font-weight: 850;
 }
 
@@ -774,7 +786,7 @@ h3 {
 
 .remarks-title {
   fill: #111827;
-  font-size: 15px;
+  font-size: 14px;
   font-weight: 900;
 }
 
@@ -783,7 +795,7 @@ h3 {
 }
 
 .total-check {
-  font-size: 15px;
+  font-size: 14px;
   font-weight: 900;
 }
 
@@ -806,7 +818,7 @@ h3 {
 .row-total,
 .hour-label {
   fill: #475569;
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 750;
 }
 
