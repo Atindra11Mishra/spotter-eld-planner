@@ -33,6 +33,10 @@ STATUS_KEYS = [
 class HOSLimitError(ValueError):
     """Raised when the requested trip cannot be completed under the assumptions."""
 
+    def __init__(self, message: str, details: dict | None = None):
+        super().__init__(message)
+        self.details = details or {}
+
 
 class HOSCalculator:
     def __init__(self, cycle_hours_used: float):
@@ -83,7 +87,15 @@ class HOSCalculator:
         locations: dict | None = None,
     ) -> dict:
         if self.initial_cycle_used >= MAX_CYCLE:
-            raise HOSLimitError("Driver has no remaining cycle hours under the 70-hour / 8-day rule.")
+            raise HOSLimitError(
+                "Driver has no remaining cycle hours under the 70-hour / 8-day rule.",
+                {
+                    "type": "cycle_limit",
+                    "cycle_hours_used": round(self.initial_cycle_used / 60, 2),
+                    "available_cycle_hours": 0,
+                    "max_cycle_hours": round(MAX_CYCLE / 60, 2),
+                },
+            )
 
         if dist_to_pickup + dist_to_dropoff < 1 or mins_to_pickup + mins_to_dropoff < 5:
             raise ValueError("Trip is too short to generate a meaningful ELD route plan.")
@@ -105,7 +117,14 @@ class HOSCalculator:
             self.rules["70_hour_cycle"]["passed"] = False
             remaining = round((MAX_CYCLE - self.cycle_used) / 60, 2)
             raise HOSLimitError(
-                f"Trip cannot be completed: only {remaining} cycle hours remain under the 70-hour / 8-day rule."
+                f"Trip cannot be completed: only {remaining} cycle hours remain under the 70-hour / 8-day rule.",
+                {
+                    "type": "cycle_limit",
+                    "cycle_hours_used": round(self.cycle_used / 60, 2),
+                    "available_cycle_hours": remaining,
+                    "max_cycle_hours": round(MAX_CYCLE / 60, 2),
+                    "blocked_activity_hours": round(duration / 60, 2),
+                },
             )
 
     def _add_entry(self, status: str, t0: int, t1: int, label: str = "", reason: str = ""):
@@ -202,7 +221,15 @@ class HOSCalculator:
 
             if cycle_left <= 0:
                 self.rules["70_hour_cycle"]["passed"] = False
-                raise HOSLimitError("Trip cannot continue: 70-hour / 8-day cycle limit reached.")
+                raise HOSLimitError(
+                    "Trip cannot continue: 70-hour / 8-day cycle limit reached.",
+                    {
+                        "type": "cycle_limit",
+                        "cycle_hours_used": round(self.cycle_used / 60, 2),
+                        "available_cycle_hours": 0,
+                        "max_cycle_hours": round(MAX_CYCLE / 60, 2),
+                    },
+                )
 
             if drive_left <= 0:
                 self._rest("11-hour driving limit reached.")

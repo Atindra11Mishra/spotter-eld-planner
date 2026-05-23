@@ -51,7 +51,11 @@ def plan_trip(request):
             },
         )
     except HOSLimitError as exc:
-        return JsonResponse({"error": str(exc)}, status=422)
+        return JsonResponse({
+            "error": str(exc),
+            "code": exc.details.get("type", "hos_limit"),
+            "details": exc.details,
+        }, status=422)
     except ValueError as exc:
         return JsonResponse({"error": str(exc)}, status=400)
     except Exception as exc:

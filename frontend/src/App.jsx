@@ -19,7 +19,11 @@ function App() {
       const data = await planTrip(payload)
       setTripData(data)
     } catch (err) {
-      setError(err.message || 'Unable to plan this trip.')
+      setError({
+        message: err.message || 'Unable to plan this trip.',
+        code: err.code,
+        details: err.details,
+      })
     } finally {
       setLoading(false)
     }
@@ -41,7 +45,7 @@ function App() {
       <section className="app-grid">
         <aside className="control-panel">
           <TripForm onSubmit={handleSubmit} loading={loading} />
-          {error && <ErrorState message={error} />}
+          {error && <ErrorState error={error} />}
         </aside>
 
         {loading ? (
@@ -61,13 +65,34 @@ function App() {
   )
 }
 
-function ErrorState({ message }) {
+function ErrorState({ error }) {
+  const details = error.details || {}
+  const isCycleLimit = error.code === 'cycle_limit'
+
   return (
     <div className="error-message" role="alert">
-      <strong>Planning failed</strong>
-      <span>{message}</span>
+      <strong>{isCycleLimit ? 'Route exceeds available cycle hours' : 'Planning failed'}</strong>
+      <span>{error.message}</span>
+      {isCycleLimit && (
+        <div className="error-detail-grid">
+          <div>
+            <small>Cycle used</small>
+            <b>{details.cycle_hours_used ?? '70'} hrs</b>
+          </div>
+          <div>
+            <small>Available</small>
+            <b>{details.available_cycle_hours ?? 0} hrs</b>
+          </div>
+          <div>
+            <small>Cycle limit</small>
+            <b>{details.max_cycle_hours ?? 70} hrs</b>
+          </div>
+        </div>
+      )}
       <small>
-        Check spelling for each location, avoid identical stops, and keep current cycle hours below the 70-hour limit.
+        {isCycleLimit
+          ? 'Try a lower current cycle value, a shorter route, or explain in the demo that the app correctly blocks trips that exceed the 70-hour cycle.'
+          : 'Check spelling for each location, avoid identical stops, and try a practical long-haul route.'}
       </small>
     </div>
   )

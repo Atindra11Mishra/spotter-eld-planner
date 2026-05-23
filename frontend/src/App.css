@@ -202,6 +202,33 @@ h3 {
   line-height: 1.35;
 }
 
+.error-detail-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  margin: 6px 0;
+}
+
+.error-detail-grid div {
+  display: grid;
+  gap: 2px;
+  border: 1px solid #fed7aa;
+  border-radius: 7px;
+  padding: 8px;
+  background: #fff7ed;
+}
+
+.error-detail-grid small {
+  color: #9a3412;
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.error-detail-grid b {
+  color: #7c2d12;
+  font-size: 15px;
+}
+
 .muted {
   color: #64748b;
 }
@@ -922,7 +949,8 @@ h3 {
 
   .form-actions,
   .metric-grid,
-  .skeleton-metrics {
+  .skeleton-metrics,
+  .error-detail-grid {
     grid-template-columns: 1fr;
   }
 

@@ -13,6 +13,9 @@ export async function planTrip(payload) {
       error.response?.data?.error ||
       error.message ||
       "Unable to plan this trip.";
-    throw new Error(message, { cause: error });
+    const planError = new Error(message, { cause: error });
+    planError.code = error.response?.data?.code;
+    planError.details = error.response?.data?.details;
+    throw planError;
   }
 }
