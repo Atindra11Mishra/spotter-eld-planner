@@ -11,11 +11,11 @@ L.Icon.Default.mergeOptions({
 
 const ICON_CONFIG = {
   current: ["#0f172a", "C"],
-  pickup: ["#16a34a", "P"],
+  pickup:  ["#16a34a", "P"],
   dropoff: ["#dc2626", "D"],
-  fuel: ["#d97706", "F"],
-  rest: ["#7c3aed", "R"],
-  break: ["#2563eb", "B"],
+  fuel:    ["#d97706", "F"],
+  rest:    ["#7c3aed", "R"],
+  break:   ["#2563eb", "B"],
 };
 
 const ICONS = Object.fromEntries(
@@ -24,8 +24,8 @@ const ICONS = Object.fromEntries(
     L.divIcon({
       className: "",
       html: `<div class="leaflet-stop-marker" style="background:${color}">${label}</div>`,
-      iconSize: [30, 30],
-      iconAnchor: [15, 15],
+      iconSize: [28, 28],
+      iconAnchor: [14, 14],
       popupAnchor: [0, -16],
     }),
   ]),
@@ -52,14 +52,26 @@ function routePosition(routeLatLngs, fraction) {
 
 function FitBounds({ positions }) {
   const map = useMap();
-
   useEffect(() => {
     if (positions.length > 1) {
       map.fitBounds(positions, { padding: [42, 42], maxZoom: 9 });
     }
   }, [map, positions]);
-
   return null;
+}
+
+function MapEmptyIcon() {
+  return (
+    <svg className="empty-map-icon" viewBox="0 0 64 64" fill="none" aria-hidden="true">
+      <rect x="6" y="18" width="36" height="26" rx="3" stroke="currentColor" strokeWidth="2"/>
+      <path d="M42 28h10l8 8v8H42V28z" stroke="currentColor" strokeWidth="2" strokeLinejoin="round"/>
+      <circle cx="17" cy="45" r="5" stroke="currentColor" strokeWidth="2"/>
+      <circle cx="51" cy="45" r="5" stroke="currentColor" strokeWidth="2"/>
+      <line x1="6" y1="32" x2="42" y2="32" stroke="currentColor" strokeWidth="1.5" strokeDasharray="4 3"/>
+      <circle cx="24" cy="11" r="5" stroke="currentColor" strokeWidth="1.5"/>
+      <path d="M24 6.5v1.2M24 14.3v1.2M19.8 8.5l0.85.85M27.35 16.15l.85.85M18.5 11H19.7M28.3 11H29.5M19.8 13.5l.85-.85M27.35 5.85l.85-.85" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/>
+    </svg>
+  );
 }
 
 export default function MapView({ data }) {
@@ -71,8 +83,9 @@ export default function MapView({ data }) {
   if (!data) {
     return (
       <div className="empty-map">
-        <p className="eyebrow">Route Map</p>
-        <h2>Interactive route preview</h2>
+        <MapEmptyIcon />
+        <p className="eyebrow" style={{marginBottom: 0}}>Route Map</p>
+        <h2 style={{marginBottom: 4}}>Interactive route preview</h2>
         <p>Submit a trip to draw the route with current, pickup, dropoff, fuel, break, and rest markers.</p>
         <div className="empty-feature-grid">
           <span>OSRM route polyline</span>
@@ -112,22 +125,41 @@ export default function MapView({ data }) {
     }))
     .filter((stop) => stop.position);
 
-  const allPositions = [...routeLatLngs, ...keyMarkers.map((marker) => marker.position), ...stopMarkers.map((marker) => marker.position)];
+  const allPositions = [
+    ...routeLatLngs,
+    ...keyMarkers.map((m) => m.position),
+    ...stopMarkers.map((m) => m.position),
+  ];
+
+  const fuelCount  = stopMarkers.filter((s) => s.type === "fuel").length;
+  const restCount  = stopMarkers.filter((s) => s.type === "rest").length;
+  const breakCount = stopMarkers.filter((s) => s.type === "break").length;
+  const totalMiles = Math.round(
+    (data.legs.to_pickup.distance_miles || 0) + (data.legs.to_dropoff.distance_miles || 0)
+  );
 
   return (
     <div className="map-view">
       <div className="map-header">
         <div>
           <p className="eyebrow">Route Map</p>
-          <h2>{shortName(data.locations.current)} to {shortName(data.locations.dropoff)}</h2>
+          <h2 style={{marginBottom: 4}}>
+            {shortName(data.locations.current)} to {shortName(data.locations.dropoff)}
+          </h2>
+          <div className="map-stats-strip">
+            <span className="map-stat">{totalMiles.toLocaleString()} mi total</span>
+            {fuelCount > 0  && <span className="map-stat">{fuelCount} fuel stop{fuelCount > 1 ? "s" : ""}</span>}
+            {restCount > 0  && <span className="map-stat">{restCount} rest stop{restCount > 1 ? "s" : ""}</span>}
+            {breakCount > 0 && <span className="map-stat">{breakCount} break{breakCount > 1 ? "s" : ""}</span>}
+          </div>
         </div>
         <div className="map-legend">
           <LegendDot type="current" label="Current" />
-          <LegendDot type="pickup" label="Pickup" />
+          <LegendDot type="pickup"  label="Pickup" />
           <LegendDot type="dropoff" label="Dropoff" />
-          <LegendDot type="fuel" label="Fuel" />
-          <LegendDot type="break" label="Break" />
-          <LegendDot type="rest" label="Rest" />
+          <LegendDot type="fuel"    label="Fuel" />
+          <LegendDot type="break"   label="Break" />
+          <LegendDot type="rest"    label="Rest" />
         </div>
       </div>
 

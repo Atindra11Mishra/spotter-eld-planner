@@ -30,38 +30,45 @@ function App() {
   }
 
   return (
-    <main className="app-shell">
-      <header className="app-header">
-        <div>
-          <p className="eyebrow">Spotter ELD Planner</p>
-          <h1>Plan routes and generate compliant ELD logs</h1>
-          <p className="header-copy">
-            Enter a route, current cycle hours, and the planner will estimate stops,
-            HOS timing, and daily duty-status sheets.
-          </p>
+    <div className="app-shell">
+      <header className="app-topbar">
+        <div className="topbar-brand">
+          <svg className="topbar-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <rect x="1" y="10" width="15" height="8" rx="1.5" stroke="currentColor" strokeWidth="1.6" fill="none"/>
+            <path d="M16 14h4l2 3v3h-6v-6z" stroke="currentColor" strokeWidth="1.6" fill="none" strokeLinejoin="round"/>
+            <circle cx="5.5" cy="18.5" r="1.5" stroke="currentColor" strokeWidth="1.4" fill="none"/>
+            <circle cx="18.5" cy="18.5" r="1.5" stroke="currentColor" strokeWidth="1.4" fill="none"/>
+          </svg>
+          <span className="topbar-name">Spotter ELD Planner</span>
+        </div>
+        <div className="topbar-meta">
+          <span className="topbar-chip">70-hr / 8-day cycle</span>
+          <span className="topbar-chip">Property carrier</span>
+          <span className="topbar-chip chip-blue">FMCSA 395.8</span>
         </div>
       </header>
 
-      <section className="app-grid">
+      <main className="app-body">
         <aside className="control-panel">
           <TripForm onSubmit={handleSubmit} loading={loading} />
           {error && <ErrorState error={error} />}
         </aside>
 
-        {loading ? (
-          <ResultsSkeleton />
-        ) : (
-          <>
-            <section className="map-panel">
-              <MapView data={tripData} />
-            </section>
-
-            <TripSummary data={tripData} />
-            <ELDLog data={tripData} schedule={tripData?.schedule} />
-          </>
-        )}
-      </section>
-    </main>
+        <div className="results-area">
+          {loading ? (
+            <ResultsSkeleton />
+          ) : (
+            <>
+              <section className="map-panel">
+                <MapView data={tripData} />
+              </section>
+              <TripSummary data={tripData} />
+              <ELDLog data={tripData} schedule={tripData?.schedule} />
+            </>
+          )}
+        </div>
+      </main>
+    </div>
   )
 }
 
@@ -71,7 +78,12 @@ function ErrorState({ error }) {
 
   return (
     <div className="error-message" role="alert">
-      <strong>{isCycleLimit ? 'Route exceeds available cycle hours' : 'Planning failed'}</strong>
+      <div className="error-title-row">
+        <svg viewBox="0 0 20 20" fill="currentColor" className="error-icon" aria-hidden="true">
+          <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm-.75-11.25a.75.75 0 011.5 0v4a.75.75 0 01-1.5 0v-4zm.75 7a1 1 0 100-2 1 1 0 000 2z" clipRule="evenodd"/>
+        </svg>
+        <strong>{isCycleLimit ? 'Route exceeds available cycle hours' : 'Planning failed'}</strong>
+      </div>
       <span>{error.message}</span>
       {isCycleLimit && (
         <div className="error-detail-grid">

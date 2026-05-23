@@ -1,20 +1,27 @@
 const STATUS_ROWS = [
-  ["off_duty", "1. Off Duty"],
-  ["sleeper_berth", "2. Sleeper Berth"],
-  ["driving", "3. Driving"],
+  ["off_duty",            "1. Off Duty"],
+  ["sleeper_berth",       "2. Sleeper Berth"],
+  ["driving",             "3. Driving"],
   ["on_duty_not_driving", "4. On Duty"],
 ];
 
+const DUTY_LABELS = [
+  ["off_duty",            "Off Duty"],
+  ["sleeper_berth",       "Sleeper"],
+  ["driving",             "Driving"],
+  ["on_duty_not_driving", "On Duty"],
+];
+
 const ROW_Y = {
-  off_duty: 168,
-  sleeper_berth: 212,
-  driving: 256,
+  off_duty:            168,
+  sleeper_berth:       212,
+  driving:             256,
   on_duty_not_driving: 300,
 };
 
-const GRID_LEFT = 150;
+const GRID_LEFT  = 150;
 const GRID_RIGHT = 1030;
-const GRID_TOP = 140;
+const GRID_TOP   = 140;
 const GRID_BOTTOM = 326;
 const GRID_WIDTH = GRID_RIGHT - GRID_LEFT;
 
@@ -35,9 +42,10 @@ function formatTotal(hours) {
 
 function remarkText(remark) {
   const place = remark.location ? ` - ${remark.location}` : "";
-  const reason = remark.reason && !["pickup", "dropoff", "fuel"].includes(remark.reason)
-    ? ` (${remark.reason})`
-    : "";
+  const reason =
+    remark.reason && !["pickup", "dropoff", "fuel"].includes(remark.reason)
+      ? ` (${remark.reason})`
+      : "";
   return `${timeLabel(remark.minute)} ${remark.label}${place}${reason}`;
 }
 
@@ -45,10 +53,29 @@ function locationLabel(location) {
   return location?.display_name?.split(",").slice(0, 2).join(", ") || "";
 }
 
+function CheckCircleIcon() {
+  return (
+    <svg viewBox="0 0 16 16" fill="none" style={{width:13,height:13}} aria-hidden="true">
+      <circle cx="8" cy="8" r="7" stroke="currentColor" strokeWidth="1.4"/>
+      <path d="M5 8.5l2 2 4-4" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/>
+    </svg>
+  );
+}
+
+function AlertIcon() {
+  return (
+    <svg viewBox="0 0 16 16" fill="none" style={{width:13,height:13}} aria-hidden="true">
+      <path d="M8 2.5L14.5 13.5H1.5L8 2.5z" stroke="currentColor" strokeWidth="1.4" strokeLinejoin="round"/>
+      <line x1="8" y1="7" x2="8" y2="10" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+      <circle cx="8" cy="12" r="0.75" fill="currentColor"/>
+    </svg>
+  );
+}
+
 export default function ELDLog({ data, schedule }) {
   const days = schedule?.days || [];
   const fromLabel = locationLabel(data?.locations?.current);
-  const toLabel = locationLabel(data?.locations?.dropoff);
+  const toLabel   = locationLabel(data?.locations?.dropoff);
 
   if (!days.length) {
     return (
@@ -81,12 +108,27 @@ export default function ELDLog({ data, schedule }) {
           <article className="log-sheet" key={day.day}>
             <div className="log-sheet-header">
               <div>
-                <p className="eyebrow">Driver's Daily Log</p>
+                <p className="eyebrow">Driver&#39;s Daily Log</p>
                 <h3>Day {day.day + 1}</h3>
               </div>
               <div className={day.is_valid_24h ? "valid-badge" : "invalid-badge"}>
-                Total lines: {formatTotal(day.total_hours)} / 24.00 hrs
+                {day.is_valid_24h ? <CheckCircleIcon /> : <AlertIcon />}
+                {formatTotal(day.total_hours)} / 24.00 hrs
               </div>
+            </div>
+
+            <div className="log-duty-legend">
+              {DUTY_LABELS.map(([key, label]) => (
+                <span key={key} className="log-duty-swatch">
+                  <span className={`duty-color-dot ${key}`} />
+                  {label}
+                  {day.totals_hours[key] > 0 && (
+                    <span style={{color:"#64748b", fontWeight:600}}>
+                      &nbsp;{formatTotal(day.totals_hours[key])}h
+                    </span>
+                  )}
+                </span>
+              ))}
             </div>
 
             <div className="log-scroll" tabIndex="0" aria-label={`Day ${day.day + 1} ELD log sheet`}>
@@ -95,17 +137,17 @@ export default function ELDLog({ data, schedule }) {
                 <text x="24" y="38" className="form-title">Drivers Daily Log</text>
                 <text x="1010" y="38" className="form-day-label">Day {day.day + 1}</text>
 
-                <FormLine x1="24" x2="360" y="78" label="From:" value={fromLabel} />
-                <FormLine x1="430" x2="760" y="78" label="To:" value={toLabel} />
-                <FormLine x1="830" x2="1140" y="78" label="Name of carrier or carriers" />
-                <FormLine x1="24" x2="500" y="112" label="Truck/tractor and trailer numbers or license plate/state" />
+                <FormLine x1="24"  x2="360"  y="78"  label="From:" value={fromLabel} />
+                <FormLine x1="430" x2="760"  y="78"  label="To:"   value={toLabel} />
+                <FormLine x1="830" x2="1140" y="78"  label="Name of carrier or carriers" />
+                <FormLine x1="24"  x2="500"  y="112" label="Truck/tractor and trailer numbers or license plate/state" />
                 <FormLine x1="560" x2="1140" y="112" label="Main office address" />
 
                 <rect x={GRID_LEFT} y={GRID_TOP - 32} width={GRID_WIDTH} height="28" fill="#0b1220" />
-                <text x={GRID_LEFT - 82} y={GRID_TOP - 12} className="grid-header-label">Midnight</text>
+                <text x={GRID_LEFT - 82}            y={GRID_TOP - 12} className="grid-header-label">Midnight</text>
                 <text x={GRID_LEFT + GRID_WIDTH / 2 - 12} y={GRID_TOP - 12} className="grid-header-text">Noon</text>
-                <text x={GRID_RIGHT - 44} y={GRID_TOP - 12} className="grid-header-text">Midnight</text>
-                <text x="1064" y={GRID_TOP - 12} className="grid-total-title">Total Hours</text>
+                <text x={GRID_RIGHT - 44}           y={GRID_TOP - 12} className="grid-header-text">Midnight</text>
+                <text x="1064"                      y={GRID_TOP - 12} className="grid-total-title">Total Hours</text>
 
                 {STATUS_ROWS.map(([key, label]) => (
                   <g key={key}>
@@ -120,17 +162,14 @@ export default function ELDLog({ data, schedule }) {
                 {Array.from({ length: 97 }, (_, index) => {
                   const minute = index * 15;
                   const x = xFromMinute(minute);
-                  const isHour = index % 4 === 0;
+                  const isHour  = index % 4 === 0;
                   const isMajor = index % 24 === 0;
-                  const tickTop = isHour ? GRID_TOP - 24 : GRID_TOP - 12;
+                  const tickTop    = isHour ? GRID_TOP - 24 : GRID_TOP - 12;
                   const tickBottom = isHour ? GRID_BOTTOM + 18 : GRID_BOTTOM + 10;
                   return (
                     <g key={index}>
                       <line
-                        x1={x}
-                        x2={x}
-                        y1={tickTop}
-                        y2={tickBottom}
+                        x1={x} x2={x} y1={tickTop} y2={tickBottom}
                         className={isMajor ? "hour-line major" : isHour ? "hour-line" : "quarter-line"}
                       />
                       {isHour && index < 96 && (
@@ -142,16 +181,26 @@ export default function ELDLog({ data, schedule }) {
                   );
                 })}
 
-                <rect x={GRID_LEFT} y={GRID_TOP - 24} width={GRID_WIDTH} height={GRID_BOTTOM - GRID_TOP + 42} fill="none" className="grid-border" />
+                <rect
+                  x={GRID_LEFT} y={GRID_TOP - 24}
+                  width={GRID_WIDTH} height={GRID_BOTTOM - GRID_TOP + 42}
+                  fill="none" className="grid-border"
+                />
 
                 {day.entries.map((entry, index) => {
-                  const y = ROW_Y[entry.status];
+                  const y  = ROW_Y[entry.status];
                   const x1 = xFromMinute(entry.start);
                   const x2 = xFromMinute(entry.end);
                   return (
                     <g key={`${entry.status}-${entry.start}-${entry.end}-${index}`}>
                       <line x1={x1} x2={x2} y1={y} y2={y} className={`duty-segment ${entry.status}`} />
-                      {index > 0 && <line x1={x1} x2={x1} y1={ROW_Y[day.entries[index - 1].status]} y2={y} className="status-change-line" />}
+                      {index > 0 && (
+                        <line
+                          x1={x1} x2={x1}
+                          y1={ROW_Y[day.entries[index - 1].status]} y2={y}
+                          className="status-change-line"
+                        />
+                      )}
                       <title>{entry.label}: {timeLabel(entry.start)} to {timeLabel(entry.end)}</title>
                     </g>
                   );
@@ -159,15 +208,18 @@ export default function ELDLog({ data, schedule }) {
 
                 <text x="24" y="378" className="remarks-title">Remarks</text>
                 <rect x="24" y="396" width="1116" height="210" fill="none" className="remarks-box" />
-                {(day.remarks.length ? day.remarks : [{ minute: 0, label: "No duty status changes recorded", location: "", reason: "" }]).slice(0, 7).map((remark, index) => (
-                  <text x="42" y={426 + index * 24} className="remarks-text" key={`${remark.type || "remark"}-${index}`}>
+                {(day.remarks.length
+                  ? day.remarks
+                  : [{ minute: 0, label: "No duty status changes recorded", location: "", reason: "" }]
+                ).slice(0, 7).map((remark, index) => (
+                  <text x="42" y={426 + index * 24} className="remarks-text" key={`remark-${index}`}>
                     {remarkText(remark)}
                   </text>
                 ))}
 
-                <text x="24" y="650" className="form-small">Shipping Documents:</text>
+                <text x="24"  y="650" className="form-small">Shipping Documents:</text>
                 <line x1="170" x2="500" y1="650" y2="650" className="form-line" />
-                <text x="24" y="684" className="form-small">Driver signature:</text>
+                <text x="24"  y="684" className="form-small">Driver signature:</text>
                 <line x1="170" x2="500" y1="684" y2="684" className="form-line" />
                 <text x="820" y="650" className={day.is_valid_24h ? "total-check ok" : "total-check bad"}>
                   Total of all lines: {formatTotal(day.total_hours)} hrs
