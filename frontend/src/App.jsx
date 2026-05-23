@@ -1,120 +1,116 @@
 import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from './assets/vite.svg'
-import heroImg from './assets/hero.png'
 import './App.css'
+import { planTrip } from './api'
+import TripForm from './components/TripForm'
+import MapView from './components/MapView'
+import ELDLog from './components/ELDLog'
+import TripSummary from './components/TripSummary'
 
 function App() {
-  const [count, setCount] = useState(0)
+  const [tripData, setTripData] = useState(null)
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
+
+  const handleSubmit = async (payload) => {
+    setLoading(true)
+    setError('')
+    setTripData(null)
+    try {
+      const data = await planTrip(payload)
+      setTripData(data)
+    } catch (err) {
+      setError(err.message || 'Unable to plan this trip.')
+    } finally {
+      setLoading(false)
+    }
+  }
 
   return (
-    <>
-      <section id="center">
-        <div className="hero">
-          <img src={heroImg} className="base" width="170" height="179" alt="" />
-          <img src={reactLogo} className="framework" alt="React logo" />
-          <img src={viteLogo} className="vite" alt="Vite logo" />
-        </div>
+    <main className="app-shell">
+      <header className="app-header">
         <div>
-          <h1>Get started</h1>
-          <p>
-            Edit <code>src/App.jsx</code> and save to test <code>HMR</code>
+          <p className="eyebrow">Spotter ELD Planner</p>
+          <h1>Plan routes and generate compliant ELD logs</h1>
+          <p className="header-copy">
+            Enter a route, current cycle hours, and the planner will estimate stops,
+            HOS timing, and daily duty-status sheets.
           </p>
         </div>
-        <button
-          type="button"
-          className="counter"
-          onClick={() => setCount((count) => count + 1)}
-        >
-          Count is {count}
-        </button>
+      </header>
+
+      <section className="app-grid">
+        <aside className="control-panel">
+          <TripForm onSubmit={handleSubmit} loading={loading} />
+          {error && <ErrorState message={error} />}
+        </aside>
+
+        {loading ? (
+          <ResultsSkeleton />
+        ) : (
+          <>
+            <section className="map-panel">
+              <MapView data={tripData} />
+            </section>
+
+            <TripSummary data={tripData} />
+            <ELDLog schedule={tripData?.schedule} />
+          </>
+        )}
       </section>
+    </main>
+  )
+}
 
-      <div className="ticks"></div>
+function ErrorState({ message }) {
+  return (
+    <div className="error-message" role="alert">
+      <strong>Planning failed</strong>
+      <span>{message}</span>
+      <small>
+        Check spelling for each location, avoid identical stops, and keep current cycle hours below the 70-hour limit.
+      </small>
+    </div>
+  )
+}
 
-      <section id="next-steps">
-        <div id="docs">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#documentation-icon"></use>
-          </svg>
-          <h2>Documentation</h2>
-          <p>Your questions, answered</p>
-          <ul>
-            <li>
-              <a href="https://vite.dev/" target="_blank">
-                <img className="logo" src={viteLogo} alt="" />
-                Explore Vite
-              </a>
-            </li>
-            <li>
-              <a href="https://react.dev/" target="_blank">
-                <img className="button-icon" src={reactLogo} alt="" />
-                Learn more
-              </a>
-            </li>
-          </ul>
+function ResultsSkeleton() {
+  return (
+    <>
+      <section className="map-panel skeleton-panel">
+        <div className="skeleton-header">
+          <span className="skeleton-line short" />
+          <span className="skeleton-line title" />
         </div>
-        <div id="social">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#social-icon"></use>
-          </svg>
-          <h2>Connect with us</h2>
-          <p>Join the Vite community</p>
-          <ul>
-            <li>
-              <a href="https://github.com/vitejs/vite" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#github-icon"></use>
-                </svg>
-                GitHub
-              </a>
-            </li>
-            <li>
-              <a href="https://chat.vite.dev/" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#discord-icon"></use>
-                </svg>
-                Discord
-              </a>
-            </li>
-            <li>
-              <a href="https://x.com/vite_js" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#x-icon"></use>
-                </svg>
-                X.com
-              </a>
-            </li>
-            <li>
-              <a href="https://bsky.app/profile/vite.dev" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#bluesky-icon"></use>
-                </svg>
-                Bluesky
-              </a>
-            </li>
-          </ul>
+        <div className="skeleton-map">
+          <span className="skeleton-route" />
+          <span className="skeleton-pin pin-a" />
+          <span className="skeleton-pin pin-b" />
+          <span className="skeleton-pin pin-c" />
         </div>
       </section>
 
-      <div className="ticks"></div>
-      <section id="spacer"></section>
+      <section className="summary-panel skeleton-panel">
+        <span className="skeleton-line short" />
+        <span className="skeleton-line title" />
+        <div className="skeleton-metrics">
+          <span />
+          <span />
+          <span />
+          <span />
+        </div>
+        <span className="skeleton-line" />
+        <span className="skeleton-line" />
+      </section>
+
+      <section className="eld-panel skeleton-panel">
+        <span className="skeleton-line short" />
+        <span className="skeleton-line title" />
+        <div className="skeleton-log">
+          {Array.from({ length: 4 }, (_, index) => (
+            <span key={index} />
+          ))}
+        </div>
+      </section>
     </>
   )
 }

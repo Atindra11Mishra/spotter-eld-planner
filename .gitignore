@@ -22,6 +22,9 @@ dist/
 .env
 .env.local
 .env.production
+assessment_resources/
+*-server.log
+*-server.err.log
 
 # Vite
 *.local
